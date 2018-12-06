@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>vue_demo</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <!-- built files will be auto injected -->
+
+    <div id="demo1">
+      <input type="text" id="input" />
+      <div>当前输入是： <span id="title"></span></div>
+      <button type="button" name="button" id="btn">添加到list</button>
+      <ul id="list"></ul>
+ </div>
+  <script>
+    const inputData = {}
+    const input = document.getElementById("input")
+    const title = document.getElementById("title")
+    const list = document.getElementById("list")
+
+    const inputDataProxy = new Proxy(inputData, {
+        get: function(target, key, receiver) {
+          console.log(`inputDataProxy getting ${key}!`)
+          return Reflect.get(target, key, receiver)
+        },
+        set: function(target, key, value, receiver) {
+          console.log('inputDataProxy setting',target, key, value, receiver)
+          if (key === "text") {
+            input.value = value
+            title.innerHTML = value
+          }
+          return Reflect.set(target, key, value, receiver)
+        }
+    })
+
+    input.addEventListener("keyup", function(e) {
+      inputDataProxy.text = e.target.value
+    })
+    
+    const render = {
+      addToList: function(val) {
+          const li = document.createElement("li")
+          li.textContent = val
+          list.appendChild(li)
+      }
+    }
+    const todoList = []
+    const dataProxy = new Proxy(todoList, {
+          get: function(target, key, receiver) {
+            console.log('dataProxy get: ',target, key, receiver)
+            return Reflect.get(target, key, receiver)
+          },
+          set: function(target, key, value, receiver) {
+              console.log('dataProxy set: ',target, key, receiver)
+              if(key !== 'length') {
+                render.addToList(value)
+              }
+              return Reflect.set(target, key, value, receiver)
+          }
+       })
+
+    // 初始化
+    window.onload = function() {
+    }
+    btn.addEventListener("click", function() {
+      dataProxy.push(inputDataProxy.text)
+    })
+
+  </script>
+
+  </body>
+</html>
